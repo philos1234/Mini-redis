@@ -7,6 +7,7 @@ enum class ValueType(val typeChar: Char) {
     STRING('+'), ERROR('-'), INTEGER(':'), BULK('$'), ARRAY('*'), UNKNOWN(' ')
 }
 
+
 data class Value(
     val type: ValueType,
     val str: String = "",
@@ -60,7 +61,6 @@ class RespReader(private val inputStream: InputStream) {
 
         return Pair(number, length)
     }
-
 
     fun read(): Value {
         val type = try {
