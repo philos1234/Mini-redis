@@ -4,7 +4,7 @@ import java.io.IOException
 import java.io.InputStream
 
 
-class RespReader(private val inputStream: InputStream) {
+class RespReader private constructor(private val inputStream: InputStream) {
 
     fun readLine(): Pair<ByteArray?, Int> {
         val lineBuffer = mutableListOf<Byte>()
@@ -91,6 +91,12 @@ class RespReader(private val inputStream: InputStream) {
             Value(ValueType.BULK, bulkValue)
         } catch (e: Exception) {
             return Value.ofEmpty(ValueType.BULK)
+        }
+    }
+
+    companion object {
+        fun of(inputStream: InputStream): RespReader {
+            return RespReader(inputStream)
         }
     }
 }

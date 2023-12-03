@@ -1,5 +1,7 @@
 import resp.RespReader
-import java.io.PrintWriter
+import resp.RespWriter
+import resp.Value
+import resp.ValueType
 import java.net.ServerSocket
 import java.net.Socket
 import kotlin.system.exitProcess
@@ -26,19 +28,20 @@ class MiniRedisServer : AutoCloseable {
 
         client.use {
 
-            val resp = RespReader(it.getInputStream())
-            val writer = PrintWriter(it.getOutputStream(), true)
+            val resp = RespReader.of(it.getInputStream())
+            val writer = RespWriter.of(it.getOutputStream())
 
             while (true) {
                 try {
-                    resp.read()
+                    val r = resp.read()
+                    println(r)
                 } catch (e: Exception) {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
                 }
-
-                writer.responseWrite("+OK")
+                writer.write(Value(type = ValueType.STRING, str = "OK"))
             }
+
         }
     }
 
@@ -50,9 +53,4 @@ class MiniRedisServer : AutoCloseable {
     override fun close() {
         server.close()
     }
-}
-
-fun PrintWriter.responseWrite(response: String) {
-    this.print(response + "\r\n")
-    this.flush()
 }

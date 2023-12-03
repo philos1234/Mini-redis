@@ -1,9 +1,17 @@
 package resp
 
+import java.io.OutputStream
 import java.io.PrintWriter
 
-class RespWriter(val writer: PrintWriter) {
-    fun marshal(response: Value): ByteArray {
+class RespWriter private constructor(val writer: PrintWriter) {
+
+    fun write(response: Value) {
+        val byte = marshal(response)
+        writer.print(byte)
+        writer.flush()
+    }
+
+    private fun marshal(response: Value): ByteArray {
         return when (response.type) {
             ValueType.ARRAY -> {
                 marshalArray(response.array)
@@ -32,11 +40,11 @@ class RespWriter(val writer: PrintWriter) {
     }
 
     private fun marshalString(stringResponse: String): ByteArray {
-        val bytes = ByteArray(stringResponse.length + 2)
+        val bytes = ByteArray(1+stringResponse.length + 2)
         bytes[0] = ValueType.STRING.ordinal.toByte() //
         stringResponse.toByteArray().copyInto(bytes, 1)
-        bytes[bytes.lastIndex - 1] = '\r'.toByte()
-        bytes[bytes.lastIndex] = '\n'.toByte()
+        bytes[bytes.lastIndex - 1] = '\r'.code.toByte()
+        bytes[bytes.lastIndex] = '\n'.code.toByte()
         return bytes
     }
 
@@ -96,5 +104,10 @@ class RespWriter(val writer: PrintWriter) {
         return "\$-1\r\n".toByteArray()
     }
 
+    companion object {
+        fun of(outputStream: OutputStream): RespWriter {
+            return RespWriter(PrintWriter(outputStream, true))
+        }
 
+    }
 }
