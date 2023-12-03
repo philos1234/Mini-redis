@@ -1,7 +1,11 @@
 package resp
 
 enum class ValueType(val typeChar: Char) {
-    STRING('+'), ERROR('-'), INTEGER(':'), BULK('$'), ARRAY('*'), UNKNOWN(' ');
+    STRING('+'), ERROR('-'), INTEGER(':'), BULK('$'), ARRAY('*'), UNKNOWN(' '), EOF('E');
+}
+
+fun ValueType.convertToCharacterByte(): Byte {
+    return this.typeChar.code.toByte()
 }
 
 data class Value(
@@ -15,5 +19,13 @@ data class Value(
         fun ofEmpty(type: ValueType): Value {
             return Value(type = type)
         }
+
+        fun ofEndOfStream(): Value{
+            return Value(type = ValueType.EOF)
+        }
+
     }
+
+    val isEndOfStream :Boolean
+        get() = type == ValueType.EOF
 }

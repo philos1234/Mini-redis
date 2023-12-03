@@ -15,7 +15,6 @@ fun main(args: Array<String>) {
 class MiniRedisServer : AutoCloseable {
 
     private val server: ServerSocket
-    private lateinit var conn: Socket
 
     init {
         println("Listening on port :6379")
@@ -23,25 +22,24 @@ class MiniRedisServer : AutoCloseable {
     }
 
     fun start() {
-
         val client = server.accept()
-
         client.use {
-
             val resp = RespReader.of(it.getInputStream())
             val writer = RespWriter.of(it.getOutputStream())
 
             while (true) {
-                try {
-                    val r = resp.read()
-                    println(r)
+                val r = try {
+                    resp.read()
                 } catch (e: Exception) {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
                 }
+                if (r.isEndOfStream) {
+                    break
+                }
+
                 writer.write(Value(type = ValueType.STRING, str = "OK"))
             }
-
         }
     }
 
