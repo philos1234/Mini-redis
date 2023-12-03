@@ -3,24 +3,6 @@ package resp
 import java.io.IOException
 import java.io.InputStream
 
-enum class ValueType(val typeChar: Char) {
-    STRING('+'), ERROR('-'), INTEGER(':'), BULK('$'), ARRAY('*'), UNKNOWN(' ')
-}
-
-
-data class Value(
-    val type: ValueType,
-    val str: String = "",
-    val num: Int = 0,
-    val bulk: String = "",
-    val array: List<Value> = emptyList()
-) {
-    companion object {
-        fun ofEmpty(type: ValueType): Value {
-            return Value(type = type)
-        }
-    }
-}
 
 class RespReader(private val inputStream: InputStream) {
 
@@ -57,14 +39,15 @@ class RespReader(private val inputStream: InputStream) {
             throw NumberFormatException("Invalid integer format: line is null")
         }
         val numberString = line.decodeToString()
-        val number = numberString.toIntOrNull() ?: throw NumberFormatException("Invalid integer format: '$numberString'")
+        val number =
+            numberString.toIntOrNull() ?: throw NumberFormatException("Invalid integer format: '$numberString'")
 
         return Pair(number, length)
     }
 
     fun read(): Value {
         val type = try {
-             inputStream.read()
+            inputStream.read()
         } catch (e: Exception) {
             return Value(ValueType.UNKNOWN)
         }
@@ -109,15 +92,5 @@ class RespReader(private val inputStream: InputStream) {
         } catch (e: Exception) {
             return Value.ofEmpty(ValueType.BULK)
         }
-    }
-
-
-    data class ReadValue(
-        val value: String,
-        val length: Int
-    )
-
-    companion object {
-        private const val MAX_CLI_COMMAND_CHAR_SIZE = 1024
     }
 }

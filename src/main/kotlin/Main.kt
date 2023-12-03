@@ -23,7 +23,6 @@ class MiniRedisServer : AutoCloseable {
     fun start() {
 
         val client = server.accept()
-//        val bufferedInputStream = BufferedInputStream(client.getInputStream())
 
         client.use {
 
@@ -32,8 +31,7 @@ class MiniRedisServer : AutoCloseable {
 
             while (true) {
                 try {
-                    val readCount = resp.read()
-
+                    resp.read()
                 } catch (e: Exception) {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
