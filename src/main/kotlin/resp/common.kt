@@ -19,11 +19,6 @@ data class Value(
         fun ofEmpty(type: ValueType): Value {
             return Value(type = type)
         }
-
-        fun ofEndOfStream(): Value{
-            return Value(type = ValueType.EOF)
-        }
-
     }
 
     val isEndOfStream :Boolean

@@ -1,11 +1,10 @@
+import org.slf4j.LoggerFactory
 import resp.RespReader
 import resp.RespWriter
 import resp.Value
 import resp.ValueType
 import java.net.ServerSocket
-import java.net.Socket
 import kotlin.system.exitProcess
-
 
 fun main(args: Array<String>) {
     val server = MiniRedisServer()
@@ -34,7 +33,8 @@ class MiniRedisServer : AutoCloseable {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
                 }
-                if (r.isEndOfStream) {
+
+                if (client.isClosed || client.isInputShutdown) {
                     break
                 }
 
@@ -43,12 +43,11 @@ class MiniRedisServer : AutoCloseable {
         }
     }
 
-
-    fun handleClient(conn: Socket) {
-
-    }
-
     override fun close() {
         server.close()
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(MiniRedisServer::class.java)
     }
 }

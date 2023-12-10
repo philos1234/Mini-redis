@@ -6,7 +6,23 @@ import java.io.InputStream
 
 class RespReader private constructor(private val inputStream: InputStream) {
 
-    fun readLine(): Pair<ByteArray?, Int> {
+    /**
+     * 프로토콜에 따라 처음 한 바이트를 읽어 타입을 결정하고 그에 따라 파싱
+     */
+    fun read(): Value {
+        val type = inputStream.read()
+
+        return when (type.toChar()) {
+            ValueType.ARRAY.typeChar -> readArray()
+            ValueType.BULK.typeChar -> readBulk()
+            else -> {
+                throw IOException("Unknown type")
+            }
+        }
+    }
+
+
+    private fun readLine(): Pair<ByteArray?, Int> {
         val lineBuffer = mutableListOf<Byte>()
         var n = 0
         try {
@@ -33,7 +49,7 @@ class RespReader private constructor(private val inputStream: InputStream) {
     }
 
 
-    fun readInteger(): Pair<Int, Int> {
+    private fun readInteger(): Pair<Int, Int> {
         val (line, length) = readLine()
         if (line == null) {
             throw NumberFormatException("Invalid integer format: line is null")
@@ -45,25 +61,8 @@ class RespReader private constructor(private val inputStream: InputStream) {
         return Pair(number, length)
     }
 
-    fun read(): Value {
-        val type = try {
-            inputStream.read()
-        } catch (e: Exception) {
-            return Value(ValueType.UNKNOWN)
-        }
 
-        return when (type.toChar()) {
-            ValueType.ARRAY.typeChar -> readArray()
-            ValueType.BULK.typeChar -> readBulk()
-            else -> {
-                println("Unknown type: ${type.toChar()}")
-                Value(ValueType.UNKNOWN)
-            }
-        }
-    }
-
-
-    fun readArray(): Value {
+    private fun readArray(): Value {
         val v = Value(ValueType.ARRAY, array = mutableListOf())
 
         // 배열 길이 읽기
@@ -78,7 +77,7 @@ class RespReader private constructor(private val inputStream: InputStream) {
         return v
     }
 
-    fun readBulk(): Value {
+    private fun readBulk(): Value {
         return try {
             val (length, _) = readInteger()
             val bulk = ByteArray(length)

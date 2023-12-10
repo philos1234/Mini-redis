@@ -89,7 +89,7 @@ class RespWriter private constructor(val writer: PrintWriter) {
         return bytes
     }
 
-    fun marshallError(value: Value): ByteArray {
+    private fun marshallError(value: Value): ByteArray {
         val strBytes = value.str.toByteArray() ?: ByteArray(0)
         val bytes = ByteArray(1 + strBytes.size + 2) // ERROR 상수 + 문자열 + "\r\n"
         var cursor = 0
@@ -102,7 +102,7 @@ class RespWriter private constructor(val writer: PrintWriter) {
         return bytes
     }
 
-    fun marshallNull(): ByteArray {
+    private fun marshallNull(): ByteArray {
         return "\$-1\r\n".toByteArray()
     }
 
