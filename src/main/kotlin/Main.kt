@@ -34,9 +34,7 @@ class MiniRedisServer : AutoCloseable {
                     exitProcess(1)
                 }
 
-                if (client.isClosed || client.isInputShutdown) {
-                    break
-                }
+                log.info("Read =====  $r")
 
                 writer.write(Value(type = ValueType.STRING, str = "OK"))
             }
