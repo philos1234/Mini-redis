@@ -1,9 +1,10 @@
 package command.handler
 
 import command.CommandType
+import command.CommandType.COMMAND
 import command.CommandType.PING
 import org.slf4j.LoggerFactory
-import java.lang.IllegalArgumentException
+import util.notNull
 
 class CommandHandlerMapper {
 
@@ -11,18 +12,11 @@ class CommandHandlerMapper {
 
     private val handlerMethodMap: Map<CommandType, HandlerMethod> = mapOf(
         (PING to Ping()),
-
-        )
+        (COMMAND to Init())
+    )
 
     fun getHandler(commandType: String): HandlerMethod {
         val command = CommandType.from(commandType)
-        log.info("Command Type ===  $command")
-
-        val handler = handlerMethodMap[command] ?: let {
-            log.error("Handler Mapping Error")
-            throw IllegalArgumentException("Invalid Command")
-        }
-
-        return handler
+        return handlerMethodMap[command].notNull { "Could not find HandlerMethod. Command Type: $commandType" }
     }
 }

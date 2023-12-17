@@ -1,8 +1,7 @@
+import command.handler.CommandHandlerMapper
 import org.slf4j.LoggerFactory
 import resp.RespReader
 import resp.RespWriter
-import resp.Value
-import resp.ValueType
 import java.net.ServerSocket
 import kotlin.system.exitProcess
 
@@ -12,12 +11,13 @@ fun main(args: Array<String>) {
 }
 
 class MiniRedisServer : AutoCloseable {
-
     private val server: ServerSocket
+    private val handlerMapper: CommandHandlerMapper
 
     init {
         println("Listening on port :6379")
         server = ServerSocket(6379)
+        handlerMapper = CommandHandlerMapper()
     }
 
     fun start() {
@@ -27,16 +27,18 @@ class MiniRedisServer : AutoCloseable {
             val writer = RespWriter.of(it.getOutputStream())
 
             while (true) {
-                val r = try {
+                val readValue = try {
                     resp.read()
                 } catch (e: Exception) {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
                 }
+                val command = readValue.array.first().str.uppercase()
+                val args = readValue.array.drop(1)
+                println("Read =====  $readValue")
 
-                log.info("Read =====  $r")
-
-                writer.write(Value(type = ValueType.STRING, str = "OK"))
+                val handler = handlerMapper.getHandler(command)
+                writer.write(handler.invoke(args))
             }
         }
     }

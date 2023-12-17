@@ -1,11 +1,12 @@
 package command
 
 import util.notNull
-import java.lang.reflect.Method
 
 enum class CommandType {
     PING, QUIT,
-    SET, GET;
+    SET, GET,
+
+    COMMAND;
 
     companion object {
         private val TYPES = entries.associateBy { it.name.lowercase() }
