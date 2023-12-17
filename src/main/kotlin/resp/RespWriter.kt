@@ -36,8 +36,6 @@ class RespWriter private constructor(val writer: PrintWriter) {
             ValueType.INTEGER -> {
                 return ByteArray(0)
             }
-
-            ValueType.EOF -> throw IllegalArgumentException("Marshal EOF is not supported")
         }
     }
 
