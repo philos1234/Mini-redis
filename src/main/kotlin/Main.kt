@@ -25,7 +25,6 @@ class MiniRedisServer : AutoCloseable {
         client.use {
             val resp = RespReader.of(it.getInputStream())
             val writer = RespWriter.of(it.getOutputStream())
-
             while (true) {
                 val readValue = try {
                     resp.read()
@@ -38,7 +37,8 @@ class MiniRedisServer : AutoCloseable {
                 println("Read =====  $readValue")
 
                 val handler = handlerMapper.getHandler(command)
-                writer.write(handler.invoke(args))
+                val commandOutput = handler.invoke(args)
+                writer.write(commandOutput.output)
             }
         }
     }
