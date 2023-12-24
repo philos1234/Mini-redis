@@ -2,7 +2,6 @@ package command.handler
 
 import command.CommandType
 import command.CommandType.*
-import org.slf4j.LoggerFactory
 import util.notNull
 
 class CommandHandlerMapper {
