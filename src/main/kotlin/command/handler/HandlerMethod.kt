@@ -6,7 +6,7 @@ import resp.Value
 import resp.ValueType
 
 private val memoryMaps = mutableMapOf<String, String>()
-
+private val hashMemoryMaps = mutableMapOf<String, MutableMap<String, String>>()
 
 fun interface HandlerMethod {
     fun invoke(args: List<Value>): CommandOutput
@@ -82,50 +82,40 @@ class Get : DefaultHandlerMethod() {
     }
 }
 
-//
-//val hsets = mutableMapOf<String, MutableMap<String, String>>()
-//
-//fun hset(args: Array<Value>): Value {
-//    if (args.size != 3) {
-//        return Value(type = "error", str = "ERR wrong number of arguments for 'hset' command")
-//    }
-//
-//    val hash = args[0].bulk
-//    val key = args[1].bulk
-//    val value = args[2].bulk
-//
-//    synchronized(hsets) {
-//        hsets.getOrPut(hash) { mutableMapOf() }[key] = value
-//    }
-//
-//    return Value(type = "string", str = "OK")
-//}
-//
-//fun hget(args: Array<Value>): Value {
-//    if (args.size != 2) {
-//        return Value(type = "error", str = "ERR wrong number of arguments for 'hget' command")
-//    }
-//
-//    val hash = args[0].bulk
-//    val key = args[1].bulk
-//
-//    val value = synchronized(hsets) { hsets[hash]?.get(key) }
-//
-//    return if (value != null) Value(type = "bulk", bulk = value)
-//    else Value(type = "null")
-//}
-//
-//fun hgetall(args: Array<Value>): Value {
-//    if (args.size != 1) {
-//        return Value(type = "error", str = "ERR wrong number of arguments for 'hgetall' command")
-//    }
-//
-//    val hash = args[0].bulk
-//
-//    val values = synchronized(hsets) { hsets[hash] }
-//        ?.flatMap { listOf(Value(type = "bulk", bulk = it.key), Value(type = "bulk", bulk = it.value)) }
-//        ?.toTypedArray()
-//        ?: arrayOf()
-//
-//    return Value(type = "array", array = values)
-//}
+class HSet : DefaultHandlerMethod() {
+    override fun invokeInternal(args: List<Value>): Value {
+        if (args.size != 3) {
+            throw HandlerMethodException("ERR wrong number of arguments for 'hset' command")
+        }
+
+        val hash = args[0].bulk
+        val key = args[1].bulk
+        val value = args[2].bulk
+
+        synchronized(hashMemoryMaps) {
+            hashMemoryMaps.getOrPut(hash) {
+                mutableMapOf(key to value)
+            }
+        }
+
+        return Value(ValueType.STRING, str = "OK")
+    }
+}
+
+class HGet : DefaultHandlerMethod() {
+    override fun invokeInternal(args: List<Value>): Value {
+        if (args.size != 2) {
+            throw HandlerMethodException("ERR wrong number of arguments for 'hget' command")
+        }
+
+        val hash = args[0].bulk
+        val key = args[1].bulk
+
+        val value = synchronized(hashMemoryMaps) {
+            hashMemoryMaps[hash]?.get(key)
+                ?: throw HandlerMethodException("ERR wrong number of arguments for 'hget' command")
+        }
+
+        return Value(ValueType.BULK, bulk = value)
+    }
+}

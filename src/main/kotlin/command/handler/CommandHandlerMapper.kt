@@ -7,8 +7,6 @@ import util.notNull
 
 class CommandHandlerMapper {
 
-    private val log = LoggerFactory.getLogger(CommandHandlerMapper::class.java)
-
     private val handlerMethodMap: Map<CommandType, HandlerMethod>
 
     init {
@@ -16,7 +14,9 @@ class CommandHandlerMapper {
             (PING to Ping()),
             (COMMAND to Init()),
             (SET to Set()),
-            (GET to Get())
+            (GET to Get()),
+            (HSET to HSet()),
+            (HGET to HGet())
         )
     }
 
