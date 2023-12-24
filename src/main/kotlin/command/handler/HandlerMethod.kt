@@ -119,3 +119,20 @@ class HGet : DefaultHandlerMethod() {
         return Value(ValueType.BULK, bulk = value)
     }
 }
+
+class HGetAll : DefaultHandlerMethod() {
+    override fun invokeInternal(args: List<Value>): Value {
+        if (args.size != 1) {
+            throw HandlerMethodException("ERR wrong number of arguments for 'hgetall' command")
+        }
+
+        val hash = args[0].bulk
+
+        val value = synchronized(hashMemoryMaps) {
+            hashMemoryMaps[hash].orEmpty()
+        }
+
+        val listOfValue = value.map { Value(ValueType.BULK, bulk = it.key) }
+        return Value(ValueType.ARRAY, array = listOfValue)
+    }
+}

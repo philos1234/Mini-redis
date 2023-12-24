@@ -16,7 +16,8 @@ class CommandHandlerMapper {
             (SET to Set()),
             (GET to Get()),
             (HSET to HSet()),
-            (HGET to HGet())
+            (HGET to HGet()),
+            (HGETALL to HGetAll())
         )
     }
 

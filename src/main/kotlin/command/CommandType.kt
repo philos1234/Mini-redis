@@ -5,7 +5,7 @@ import util.notNull
 enum class CommandType {
     PING, QUIT,
     SET, GET,
-    HSET, HGET,
+    HSET, HGET, HGETALL,
 
     COMMAND;
 
