@@ -3,28 +3,26 @@ package resp
 import java.io.IOException
 import java.io.InputStream
 
-enum class ValueType(val typeChar: Char) {
-    STRING('+'), ERROR('-'), INTEGER(':'), BULK('$'), ARRAY('*'), UNKNOWN(' ')
-}
 
+class RespReader private constructor(private val inputStream: InputStream) {
 
-data class Value(
-    val type: ValueType,
-    val str: String = "",
-    val num: Int = 0,
-    val bulk: String = "",
-    val array: List<Value> = emptyList()
-) {
-    companion object {
-        fun ofEmpty(type: ValueType): Value {
-            return Value(type = type)
+    /**
+     * 프로토콜에 따라 처음 한 바이트를 읽어 타입을 결정하고 그에 따라 파싱
+     */
+    fun read(): Value {
+        val type = inputStream.read()
+
+        return when (type.toChar()) {
+            ValueType.ARRAY.typeChar -> readArray()
+            ValueType.BULK.typeChar -> readBulk()
+            else -> {
+                throw IOException("Unknown type")
+            }
         }
     }
-}
 
-class RespReader(private val inputStream: InputStream) {
 
-    fun readLine(): Pair<ByteArray?, Int> {
+    private fun readLine(): Pair<ByteArray?, Int> {
         val lineBuffer = mutableListOf<Byte>()
         var n = 0
         try {
@@ -51,36 +49,20 @@ class RespReader(private val inputStream: InputStream) {
     }
 
 
-    fun readInteger(): Pair<Int, Int> {
+    private fun readInteger(): Pair<Int, Int> {
         val (line, length) = readLine()
         if (line == null) {
             throw NumberFormatException("Invalid integer format: line is null")
         }
         val numberString = line.decodeToString()
-        val number = numberString.toIntOrNull() ?: throw NumberFormatException("Invalid integer format: '$numberString'")
+        val number =
+            numberString.toIntOrNull() ?: throw NumberFormatException("Invalid integer format: '$numberString'")
 
         return Pair(number, length)
     }
 
-    fun read(): Value {
-        val type = try {
-             inputStream.read()
-        } catch (e: Exception) {
-            return Value(ValueType.UNKNOWN)
-        }
 
-        return when (type.toChar()) {
-            ValueType.ARRAY.typeChar -> readArray()
-            ValueType.BULK.typeChar -> readBulk()
-            else -> {
-                println("Unknown type: ${type.toChar()}")
-                Value(ValueType.UNKNOWN)
-            }
-        }
-    }
-
-
-    fun readArray(): Value {
+    private fun readArray(): Value {
         val v = Value(ValueType.ARRAY, array = mutableListOf())
 
         // 배열 길이 읽기
@@ -95,7 +77,7 @@ class RespReader(private val inputStream: InputStream) {
         return v
     }
 
-    fun readBulk(): Value {
+    private fun readBulk(): Value {
         return try {
             val (length, _) = readInteger()
             val bulk = ByteArray(length)
@@ -111,13 +93,9 @@ class RespReader(private val inputStream: InputStream) {
         }
     }
 
-
-    data class ReadValue(
-        val value: String,
-        val length: Int
-    )
-
     companion object {
-        private const val MAX_CLI_COMMAND_CHAR_SIZE = 1024
+        fun of(inputStream: InputStream): RespReader {
+            return RespReader(inputStream)
+        }
     }
 }

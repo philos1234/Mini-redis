@@ -1,9 +1,9 @@
+import command.handler.CommandHandlerMapper
+import org.slf4j.LoggerFactory
 import resp.RespReader
-import java.io.PrintWriter
+import resp.RespWriter
 import java.net.ServerSocket
-import java.net.Socket
 import kotlin.system.exitProcess
-
 
 fun main(args: Array<String>) {
     val server = MiniRedisServer()
@@ -11,50 +11,43 @@ fun main(args: Array<String>) {
 }
 
 class MiniRedisServer : AutoCloseable {
-
     private val server: ServerSocket
-    private lateinit var conn: Socket
+    private val handlerMapper: CommandHandlerMapper
 
     init {
         println("Listening on port :6379")
         server = ServerSocket(6379)
+        handlerMapper = CommandHandlerMapper()
     }
 
     fun start() {
-
         val client = server.accept()
-//        val bufferedInputStream = BufferedInputStream(client.getInputStream())
-
         client.use {
-
-            val resp = RespReader(it.getInputStream())
-            val writer = PrintWriter(it.getOutputStream(), true)
-
+            val resp = RespReader.of(it.getInputStream())
+            val writer = RespWriter.of(it.getOutputStream())
             while (true) {
-                try {
-                    val readCount = resp.read()
-
+                val readValue = try {
+                    resp.read()
                 } catch (e: Exception) {
                     println("error reading from client: ${e.message}")
                     exitProcess(1)
                 }
+                val command = readValue.array.first().str.uppercase()
+                val args = readValue.array.drop(1)
+                println("Read =====  $readValue")
 
-                writer.responseWrite("+OK")
+                val handler = handlerMapper.getHandler(command)
+                val commandOutput = handler.invoke(args)
+                writer.write(commandOutput.output)
             }
         }
-    }
-
-
-    fun handleClient(conn: Socket) {
-
     }
 
     override fun close() {
         server.close()
     }
-}
 
-fun PrintWriter.responseWrite(response: String) {
-    this.print(response + "\r\n")
-    this.flush()
+    companion object {
+        private val log = LoggerFactory.getLogger(MiniRedisServer::class.java)
+    }
 }
