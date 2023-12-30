@@ -1,9 +1,10 @@
 package command
 
-import util.notNull
+import command.handler.HandlerMethodException
+import util.notNullOrThrow
 
 enum class CommandType {
-    PING, QUIT,
+    PING,
     SET, GET,
     HSET, HGET, HGETALL,
 
@@ -12,7 +13,7 @@ enum class CommandType {
     companion object {
         private val TYPES = entries.associateBy { it.name.lowercase() }
         fun from(commandType: String): CommandType {
-            return TYPES[commandType.lowercase()].notNull { "Invalid Command Type : $commandType" }
+            return TYPES[commandType.lowercase()].notNullOrThrow { HandlerMethodException("Invalid Command Type : $commandType") }
         }
     }
 }

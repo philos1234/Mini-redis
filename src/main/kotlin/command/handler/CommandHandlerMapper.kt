@@ -2,13 +2,14 @@ package command.handler
 
 import command.CommandType
 import command.CommandType.*
-import util.notNull
+import util.notNullOrThrow
 
 class CommandHandlerMapper {
 
-    private val handlerMethodMap: Map<CommandType, HandlerMethod>
+    val handlerMethodMap: Map<CommandType, HandlerMethod>
 
     init {
+
         handlerMethodMap = mapOf(
             (PING to Ping()),
             (COMMAND to Init()),
@@ -22,6 +23,6 @@ class CommandHandlerMapper {
 
     fun getHandler(commandType: String): HandlerMethod {
         val command = CommandType.from(commandType)
-        return handlerMethodMap[command].notNull { "Could not find HandlerMethod. Command Type: $commandType" }
+        return handlerMethodMap[command].notNullOrThrow { HandlerMethodException("Could not find HandlerMethod. Command Type: $commandType") }
     }
 }
