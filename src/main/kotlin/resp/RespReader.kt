@@ -9,7 +9,7 @@ class RespReader private constructor(private val inputStream: InputStream) {
     /**
      * 프로토콜에 따라 처음 한 바이트를 읽어 타입을 결정하고 그에 따라 파싱
      */
-    fun read(): Value {
+    fun readValue(): Value {
         val type = inputStream.read()
 
         return when (type.toChar()) {
@@ -18,6 +18,16 @@ class RespReader private constructor(private val inputStream: InputStream) {
             else -> {
                 throw IOException("Unknown type")
             }
+        }
+    }
+
+    fun readValueOrNull(): Value? {
+        val type = inputStream.read()
+
+        return when (type.toChar()) {
+            ValueType.ARRAY.typeChar -> readArray()
+            ValueType.BULK.typeChar -> readBulk()
+            else -> null
         }
     }
 
@@ -70,7 +80,7 @@ class RespReader private constructor(private val inputStream: InputStream) {
 
         // 배열의 각 요소를 파싱하고 읽기
         for (i in 0 until len) {
-            val value = read()
+            val value = readValue()
             // 파싱된 값을 배열에 추가
             (v.array as MutableList).add(value)
         }
